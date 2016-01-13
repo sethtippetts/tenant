@@ -11,6 +11,7 @@ export default class Tenancy {
       connections: [],
       tenantPath: 'tenant',
       requestKey: 'ENV',
+      defaultTenant: 'default',
       parse: (key, req) => {
         if (!key) return;
         return req.get(key)
@@ -61,7 +62,8 @@ export default class Tenancy {
   middleware(req, res, next) {
 
     this.parse(req)
-      .then(tenant => {
+      .then((tenantKey = this.defaultTenant) => {
+        let tenant = get(this, ['tenants', tenantKey]);
 
         set(req, this.tenantPath, tenant);
         next();

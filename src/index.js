@@ -1,10 +1,12 @@
 import convict from 'convict';
-import { get, set } from 'object-path';
+import { get, set, coalesce } from 'object-path';
 import assert from 'assert';
 import Promise from 'bluebird';
 
 export default class Tenancy {
   constructor(config) {
+
+    // Assign
     Object.assign(this, {
       index: {},// file,
       tenants: [],
@@ -21,18 +23,15 @@ export default class Tenancy {
       },
     }, config);
 
+    // Index tenants defined as an array
     if (Array.isArray(this.tenants)) {
-      this.tenants = toMap('tenant', this.tenants);
+      this.tenants = toIndex(['key', 'tenant'], ['config'], this.tenants, 'tenant');
     }
 
-    console.log('before', this.tenants);
-
-    Object.keys(this.tenants)
-      .map(key => {
-        this.tenants[key] = this.populate(convict(this.index), key);
-      });
-
-    console.log('after', this.tenants);
+    // Recursively create convict config for each tenant
+    for (let tenant in this.tenants) {
+      this.tenants[tenant] = this.populate(convict(this.index), this.tenants[tenant]);
+    }
 
     this.connections = this.connections.reduce((prev, conn) => {
       let { getter, key } = conn;
@@ -46,21 +45,19 @@ export default class Tenancy {
   }
   getConnection(...args) {
     let [key, req, ...extra] = args;
-    let tenantKey = get(req, this.tenantPath);
-    let tenant = get(this, ['tenants', tenantKey], false);
+    let tenant = get(req, this.tenantPath, false);
     let getter = get(this, ['connections', key.toLowerCase()]);
 
     assert(typeof getter === 'function', `Connection key "${key}" not found.`);
-    assert(tenant, `Tenant environment with key "${tenantKey}" not found.`);
+    assert(tenant, `Tenant environment with key "${tenant.tenant}" not found.`);
 
-    return getter(...extra, tenantKey, tenant);
+    return getter(...extra, tenant);
   }
   config(key) {
     if (typeof key === 'object') key = get(key, this.tenantPath);
     return get(this, ['tenants', key]);
   }
   middleware(req, res, next) {
-
     this.parse(req)
       .then((tenantKey = this.defaultTenant) => {
         let tenant = get(this, ['tenants', tenantKey]);
@@ -70,23 +67,24 @@ export default class Tenancy {
       })
       .catch(next);
   }
-  populate(config, key) {
-    let tenant = get(this, ['tenants', key], {});
+  populate(config, tenant = {}) {
     let extendKey = get(tenant, 'extends');
-
-    console.log('populate', tenant, extendKey);
     if (!Object.keys(tenant).length) return;
-
-    if (extendKey) this.populate(config, extendKey);
-    config.load(this.tenants[key]);
+    if (extendKey) this.populate(config, get(this, ['tenants', extendKey], {}));
+    config.load(tenant);
     return config;
   }
 }
 
-function toMap(key, arr) {
-  return arr.reduce((prev, curr) => {
-
-    prev[curr[key]] = curr;
+function toIndex(key, value, arr, name) {
+  return arr.reduce((prev, obj, idx) => {
+    let key = getValue(key, obj), value = getValue(value, obj, obj);
+    assert(key, `Invalid ${name} configuration at index [${idx}]`);
+    prev[key] = value;
     return prev;
   }, {});
+}
+function getValue(key, source, defaultValue) {
+  if (Array.isArray(key)) return coalesce(source, key, defaultValue);
+  return get(source, key, defaultValue)
 }

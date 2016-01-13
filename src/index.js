@@ -53,7 +53,7 @@ export default class Tenancy {
 
     return getter(...extra, tenant);
   }
-  config(key) {
+  config(key = this.defaultTenant) {
     if (typeof key === 'object') key = get(key, this.tenantPath);
     return get(this, ['tenants', key]);
   }

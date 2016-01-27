@@ -2,6 +2,8 @@ import convict from 'convict';
 import { get, set, coalesce } from 'object-path';
 import assert from 'assert';
 import Promise from 'bluebird';
+import { Router } from 'express';
+import expressMiddleware from './middleware/express';
 
 export default class Tenancy {
   constructor(config) {
@@ -11,6 +13,7 @@ export default class Tenancy {
       index: {},// file,
       tenants: [],
       connections: [],
+      middlewares: [],
       tenantPath: 'tenant',
       requestKey: 'ENV',
       defaultTenant: 'default',
@@ -23,49 +26,67 @@ export default class Tenancy {
       },
     }, config);
 
-    // Index tenants defined as an array
-    if (Array.isArray(this.tenants)) {
-      this.tenants = toIndex(['key', 'tenant'], ['config'], this.tenants, 'tenant');
-    }
-
-    // Recursively create convict config for each tenant
-    for (let tenant in this.tenants) {
-      this.tenants[tenant] = this.populate(convict(this.index), this.tenants[tenant]);
-    }
-
-    this.connections = this.connections.reduce((prev, conn) => {
-      let { getter, key } = conn;
-      let type = typeof getter;
-      if (type === 'object') prev[key] = () => conn;
-      if (type === 'function') prev[key] = Promise.method(getter);
-      return prev;
-    }, {});
-
     this.parse = Promise.method(this.parse.bind(null, this.requestKey));
-  }
-  getConnection(...args) {
-    let [key, req, ...extra] = args;
-    let tenant = get(req, this.tenantPath, false);
-    let getter = get(this, ['connections', key.toLowerCase()]);
 
-    assert(typeof getter === 'function', `Connection key "${key}" not found.`);
-    assert(tenant, `Tenant environment with key "${tenant.tenant}" not found.`);
+    ['tenant', 'middleware', 'connection'].map(type => {
+      let list = this[`${type}s`];
+      for (var key in list) {
+        this[type](key, list[key]);
+      }
+    });
 
-    return getter(...extra, tenant);
+    this.middleware('express', expressMiddleware, true);
   }
-  config(key = this.defaultTenant) {
+  middleware(key, factory, isInternal) {
+    // Getter
+    if (!factory) return this.middlewares[key];
+    factory = factory.bind(this);
+
+    // For internal parse middlewares
+    if (isInternal) {
+      this.middlewares[key] = factory();
+      return this;
+    }
+
+    // Setter
+    let router = new Router();
+    router.use(this.addURLPrefix.bind(this));
+    for (let tenant in this.tenants) {
+      router.use(`/${tenant}`, factory(this.tenants[tenant]));
+    }
+    router.use(this.removeURLPrefix.bind(this));
+    this.middlewares[key] = router;
+    return this;
+  }
+  connection(key, value, ...extra) {
+    // Getter
+    if (typeof value !== 'function') {
+      let tenant = get(value, this.tenantPath, false);
+      let getter = get(this, ['connections', key.toLowerCase()]);
+
+      assert(typeof getter === 'function', `Connection key "${key}" not found.`);
+      assert(tenant, `Tenant environment with key "${tenant.tenant}" not found.`);
+
+      return getter(...extra, tenant);
+    }
+
+    // Setter
+    this.connections[key] = Promise.method(value);
+    return this;
+  }
+  config(...args) {
+    return this.tenant(...args);
+  }
+  tenant(key = this.defaultTenant, value = false) {
+    // Value passed was a request, get the tenant config from it.
     if (typeof key === 'object') key = get(key, this.tenantPath);
-    return get(this, ['tenants', key]);
-  }
-  middleware(req, res, next) {
-    this.parse(req)
-      .then((tenantKey = this.defaultTenant) => {
-        let tenant = get(this, ['tenants', tenantKey]);
 
-        set(req, this.tenantPath, tenant);
-        next();
-      })
-      .catch(next);
+    // Getter
+    if (!value) return get(this, ['tenants', key]);
+
+    // Setter
+    this.tenants[key] = this.populate(convict(this.index), value);
+    return this;
   }
   populate(config, tenant = {}) {
     let extendKey = get(tenant, 'extends');
@@ -74,17 +95,14 @@ export default class Tenancy {
     config.load(tenant);
     return config;
   }
-}
+  addURLPrefix(req, res, next) {
+    let tenant = get(req, this.tenantPath);
 
-function toIndex(key, value, arr, name) {
-  return arr.reduce((prev, obj, idx) => {
-    let key = getValue(key, obj), value = getValue(value, obj, obj);
-    assert(key, `Invalid ${name} configuration at index [${idx}]`);
-    prev[key] = value;
-    return prev;
-  }, {});
-}
-function getValue(key, source, defaultValue) {
-  if (Array.isArray(key)) return coalesce(source, key, defaultValue);
-  return get(source, key, defaultValue)
+    req.url = `/${tenant.get('env')}${req.url}`;
+    next();
+  }
+  removeURLPrefix(req, res, next) {
+    req.url = req.originalUrl;
+    next();
+  }
 }

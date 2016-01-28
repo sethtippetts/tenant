@@ -1,4 +1,5 @@
 import assert from 'assert';
+import Bluebird from 'bluebird';
 
 export default class Tenancy {
   constructor(name = 'development', config = {}, connections = {}) {
@@ -6,6 +7,7 @@ export default class Tenancy {
     assert(typeof name === 'string', 'Tenant constructor requires "name"');
 
     // Assign
+    this._config = {};
     this.config = config;
     this.name = name;
     this.connections = connections;
@@ -19,7 +21,7 @@ export default class Tenancy {
     let [ value ] = extra;
     // Setter
     if (typeof value === 'function') {
-      this.connections[name] = Promise.method(value);
+      this.connections[name] = Bluebird.method(value);
       return this;
     }
 

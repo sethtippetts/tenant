@@ -1,6 +1,6 @@
 {
   "name": "tenant",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Multi-tenancy express middleware",
   "main": "lib/Tenancy.js",
   "scripts": {

@@ -51,3 +51,25 @@ app.use(tenant.middleware);
 
 app.listen(3000);
 ```
+
+## API Reference
+
+### Tenancy
+
+#### constructor(<Object> params)
+
+*params*
+Type: Object
+
+>Properties
+```js
+{
+  index: {}, // Convict index object for validation
+  configurations: [],
+  connections: [[Connection](#connections)],
+  middlewares: [[Middleware](#middleware)],
+  tenantPath: 'tenant',
+  requestKey: 'ENV',
+  defaultTenant: 'default',
+}
+```

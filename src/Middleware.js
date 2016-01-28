@@ -11,7 +11,7 @@ export default class Middleware extends Tenancy {
     Object.assign(this, {
       tenantPath: 'tenant',
       requestKey: 'ENV',
-      defaultTenant: 'default',
+      defaultTenant: process.env.NODE_ENV || 'development',
       parse: (key, req) => {
         if (!key) return;
         return req.get(key)
@@ -24,7 +24,7 @@ export default class Middleware extends Tenancy {
     this.parse = Promise.method(this.parse.bind(null, this.requestKey));
 
     for (var key in this.middlewares) {
-      this[type](key, this.middlewares[key]);
+      this.middleware(key, this.middlewares[key]);
     }
   }
   inject(req, res, next) {

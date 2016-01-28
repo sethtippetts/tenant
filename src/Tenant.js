@@ -1,7 +1,7 @@
 import assert from 'assert';
 
 export default class Tenancy {
-  constructor(name, config = {}, connections = {}) {
+  constructor(name = 'development', config = {}, connections = {}) {
 
     assert(typeof name === 'string', 'Tenant constructor requires "name"');
 

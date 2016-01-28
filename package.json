@@ -2,7 +2,7 @@
   "name": "tenant",
   "version": "1.0.1",
   "description": "Multi-tenancy express middleware",
-  "main": "lib/Tenancy.js",
+  "main": "lib/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "compile": "babel -d lib/ src/",

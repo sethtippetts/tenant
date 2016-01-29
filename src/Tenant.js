@@ -7,8 +7,7 @@ export default class Tenancy {
     assert(typeof name === 'string', 'Tenant constructor requires "name"');
 
     // Assign
-    this._config = {};
-    this.config = config;
+    this._config = config;
     this.name = name;
     this.connections = connections;
 

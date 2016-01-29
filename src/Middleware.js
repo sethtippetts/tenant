@@ -1,27 +1,23 @@
-import assert from 'assert';
 import Promise from 'bluebird';
 import Tenancy from './Tenancy';
+import requestParser from './request-parser';
 
 export default class Middleware extends Tenancy {
   constructor(config) {
-
     super(config);
 
-    // Assign defaults
-    Object.assign(this, {
-      tenantPath: 'tenant',
-      requestKey: 'ENV',
-      defaultTenant: process.env.NODE_ENV || 'development',
-      parse: (key, req) => {
-        if (!key) return;
-        return req.get(key)
-            || req.get(`X-${key}`)
-            || req.query[key]
-            || req.query[key.toLowerCase()];
-      },
-    }, config);
+    let {
+      middlewares = {},
+      tenantPath = 'tenant',
+      requestKey = 'ENV',
+      parse = requestParser,
+    } = config;
 
-    this.parse = Promise.method(this.parse.bind(null, this.requestKey));
+    // Assign defaults
+    this.middlewares = middlewares;
+    this.tenantPath = tenantPath;
+    this.requestKey = requestKey;
+    this.parse = Promise.method(parse.bind(null, this.requestKey));
 
     for (var key in this.middlewares) {
       this.middleware(key, this.middlewares[key]);

@@ -2,9 +2,10 @@ import Promise from 'bluebird';
 import Tenant from './Tenant';
 
 export default class Tenancy {
-  constructor({ tenants = {}, connections = {} }) {
+  constructor({ defaultTenant = process.env.NODE_ENV || 'development', tenants = {}, connections = {} }) {
     this.connections = {};
     this.tenants = {};
+    this.defaultTenant = defaultTenant;
 
     for (let key in tenants) {
       this.tenant(key, tenants[key]);
@@ -25,7 +26,7 @@ export default class Tenancy {
     this.connections[name] = _connection;
     return this;
   }
-  tenant(name, value) {
+  tenant(name = this.defaultTenant, value = false) {
     if (!value) return this.tenants[name];
 
     let _tenant = value;

@@ -7,7 +7,7 @@ export default class Tenancy {
     assert(typeof name === 'string', 'Tenant constructor requires "name"');
 
     // Assign
-    this._config = config;
+    this.config = config;
     this.name = name;
     this.connections = connections;
 
@@ -29,13 +29,5 @@ export default class Tenancy {
 
     assert(typeof getter === 'function', `Connection name "${name}" not found.`);
     return getter(...extra, this.config);
-  }
-  get config() {
-    return this._config;
-  }
-  set config(value) {
-    if (typeof value === 'object') {
-      Object.assign(this._config, value);
-    }
   }
 }

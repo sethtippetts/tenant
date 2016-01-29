@@ -1,75 +1,170 @@
 # Tenant
 
-Express middleware for multi-tenant configuration and connection managment.
+Unopinionated tenanted connection and configuration management
 
 ## Getting started
 
-### Configuration options
+### Tenancy configuration options
 
 ```js
-export default new Tenancy({
-  // Convict index configuration (optional)
-  index,
+import Tenancy from 'tenant';
+import Bluebird from 'bluebird';
+
+let tenancy = new Tenancy({
+  defaultTenant: process.env.NODE_ENV || 'development',
   tenants: {
-    default: {}, // Default config that prod/stage extend.
-    production,
-    staging
+    production: convict({}), // use some library
+    staging: config, // a custom module
+    development: {}, // a plain object!?
   },
-  connections: [
-    {
-      key: 'salesforce',
-      getter: (modelKey, config) => getModels(modelKey, config.get('tenant')),
+  connections: {
+
+    // I apologize.
+    salesforce(config) {
+      let { username, hostname, password, token } = config.salesforce;
+      let conn = new jsforce.Connection({
+        loginUrl: hostname,
+        accessToken: token,
+      });
+
+      return Bluebird.fromCallback(cb => conn.login(username, password + token, cb))
     },
+
+    // Less gross.
+    couch(config) {
+      return nano(config.couch.url);
+    },
+    // ...other tenanted connections
   ],
 });
 ```
 
+### Functional initialization
+
+Alternatively if can add connections and tenants functionally
+
+__Example__:
+```js
+import { Tenancy, Tenant } from 'tenant';
+
+let tenancy = new Tenancy();
+
+let staging = new Tenant('staging', stagingConfig);
+
+tenancy
+  .tenant(staging)
+  .connection('salesforce', (config) => Promise.reject(new Error('Really? Still Salesforce?')))
+  .tenant('production', prodConfig);
+
+export default tenancy;
+```
+
+
+####tenants: _\<Object\>_
+
+Tenant values are configuration objects that get passed to connection factories.
+
+####connections: _\<Function\>_
+
+Connection factories are functions with tenant configuration as the last argument.
+Connection factory function must return a promise, an object, or throw an error.
 
 ```js
-import express from 'express';
-import Tenancy from 'tenant';
-import defaultConfig, { production, staging } from './config';
+function([additional arguments...], config) {
+  return Promise|Object;
 
-let app = express();
-let tenant = new Tenancy({
-  index,
-  defaultTenant: process.env.NODE_ENV,
-  tenants: {
-    default: {}, // Default config that prod/stage extend.
-    production,
-    staging
-  },
-  connections: [
-    {
-      key: 'salesforce',
-      getter: (modelKey, config) => getModels(modelKey, config.get('tenant')),
-    },
-  ],
-});
+  *-or-*
 
-app.use(tenant.middleware);
+  throw new Error();
+}
+```
 
-app.listen(3000);
+### Getting tenant configuration
+```js
+let secret = tenancy.tenant('production').config.sessionSecret;
+```
+
+### Getting a tenant connection
+```js
+let results = tenancy.tenant('staging').connection('couch')
+  .then(CouchDB => {
+    let Users = CouchDB.use('users');
+    return Users.list();
+  });
 ```
 
 ## API Reference
 
 ### Tenancy
 
-#### constructor(<Object> params)
+#### Methods
+------------
 
-*params*
-Type: Object
+#### `constructor(params)`
 
->Properties
+**params** `Object`
+
+>**Example**
 ```js
-{
-  index: {}, // Convict index object for validation
-  configurations: [],
-  connections: [[Connection](#connections)],
-  middlewares: [[Middleware](#middleware)],
-  tenantPath: 'tenant',
-  requestKey: 'ENV',
-  defaultTenant: 'default',
-}
+new Tenancy({
+  tenants: {
+    staging: { /* Staging config */ }
+  },
+  connections: {
+    couch: function(config) {
+      return Promise.resolve('yay');
+    },
+  },
+  defaultTenant: process.env.NODE_ENV || 'development',
+});
 ```
+
+#### `tenant(tenant)`
+
+**tenant** [`Tenant`](#tenant)
+
+>**Example**
+```js
+tenancy.tenant(new Tenant('staging', {}));
+```
+
+#### `tenant(name, config)`
+
+**name** `String`
+
+**config** `Object`
+
+>**Example**
+```js
+tenancy.tenant('staging', {});
+```
+
+#### `connection(name, factory)`
+
+**name** `String`
+
+**factory** `Function`
+
+>**Example**
+```js
+tenancy.connection('couch', function(){});
+```
+
+### Tenant
+
+#### `constructor(name, configuration, connectionsMap)`
+
+**name**
+String
+
+Key used to retrieve this tenant
+
+**configuration**
+Object
+
+Configuration object that gets passed to connection factories.
+
+**connectionsMap**
+Object
+
+Key-Value pairs of connections names and factory methods

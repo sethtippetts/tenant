@@ -1,6 +1,6 @@
 {
   "name": "tenant",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Unopinionated tenanted connection and configuration management",
   "main": "lib/index.js",
   "scripts": {
@@ -13,7 +13,12 @@
     "type": "git",
     "url": "git+https://github.com/SethTippetts/tenant.git"
   },
-  "keywords": ["multi-tenancy", "tenancy", "tenant", "environment connections"],
+  "keywords": [
+    "multi-tenancy",
+    "tenancy",
+    "tenant",
+    "environment connections"
+  ],
   "author": "Seth Tippetts <sethtippetts@gmail.com> (http://sethtippetts.com)",
   "license": "ISC",
   "bugs": {

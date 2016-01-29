@@ -1,8 +1,8 @@
 # Tenant
 
-Unopinionated tenanted connection and configuration management
-
 ## Getting started
+
+>Looking for the express middleware? Try [express-tenant](express-tenant)!
 
 ### Tenancy configuration options
 

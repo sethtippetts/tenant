@@ -1,7 +1,7 @@
 {
   "name": "tenant",
   "version": "1.1.0",
-  "description": "Multi-tenancy express middleware",
+  "description": "Unopinionated tenanted connection and configuration management",
   "main": "lib/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

@@ -27,6 +27,11 @@ export default class Tenancy {
     return this;
   }
   tenant(name = this.defaultTenant, value = false) {
+
+    if (typeof name !== 'string' && name instanceof Tenant) {
+      value = name;
+    }
+
     if (!value) return this.tenants[name];
 
     let _tenant = value;

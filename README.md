@@ -4,6 +4,22 @@
 
 >Looking for the express middleware? Try [express-tenant](express-tenant)!
 
+### Installation
+
+```bash
+$ npm i --save tenant
+```
+
+**ES5**
+```js
+var Tenancy = require('tenant');
+```
+
+**ES6**
+```js
+import { Tenancy, Tenant, Middleware } from 'tenant';
+```
+
 ### Tenancy configuration options
 
 ```js
@@ -27,7 +43,9 @@ let tenancy = new Tenancy({
         accessToken: token,
       });
 
-      return Bluebird.fromCallback(cb => conn.login(username, password + token, cb))
+      return Bluebird.fromCallback(cb => {
+        conn.login(username, password + token, cb);
+      })
     },
 
     // Less gross.
@@ -41,7 +59,7 @@ let tenancy = new Tenancy({
 
 ### Functional initialization
 
-Alternatively if can add connections and tenants functionally
+Alternatively you can add connections and tenants functionally
 
 __Example__:
 ```js
@@ -53,30 +71,12 @@ let staging = new Tenant('staging', stagingConfig);
 
 tenancy
   .tenant(staging)
-  .connection('salesforce', (config) => Promise.reject(new Error('Really? Still Salesforce?')))
+  .connection('salesforce', (config) => {
+    return Promise.reject(new Error('Really? Still Salesforce?'));
+  })
   .tenant('production', prodConfig);
 
 export default tenancy;
-```
-
-
-####tenants: _\<Object\>_
-
-Tenant values are configuration objects that get passed to connection factories.
-
-####connections: _\<Function\>_
-
-Connection factories are functions with tenant configuration as the last argument.
-Connection factory function must return a promise, an object, or throw an error.
-
-```js
-function([additional arguments...], config) {
-  return Promise|Object;
-
-  *-or-*
-
-  throw new Error();
-}
 ```
 
 ### Getting tenant configuration
@@ -107,14 +107,20 @@ let results = tenancy.tenant('staging').connection('couch')
 >**Example**
 ```js
 new Tenancy({
+
+  // Tenant configurations
   tenants: {
     staging: { /* Staging config */ }
   },
+
+  // Tenanted connections
   connections: {
     couch: function(config) {
       return Promise.resolve('yay');
     },
   },
+
+  // Default tenant if none is provided
   defaultTenant: process.env.NODE_ENV || 'development',
 });
 ```
@@ -127,6 +133,12 @@ new Tenancy({
 ```js
 tenancy.tenant(new Tenant('staging', {}));
 ```
+
+#### `tenant([name])`
+
+**name** `String` _(optional)_
+
+Returns a tenant by the name or the default tenant if none is provided
 
 #### `tenant(name, config)`
 
@@ -143,7 +155,19 @@ tenancy.tenant('staging', {});
 
 **name** `String`
 
+Key associated with a connection factory.
+
 **factory** `Function`
+
+Connection factories are functions with tenant configuration as the last argument.
+Connection factory function must return a promise, an object, or throw an error.
+
+>**Example**
+```js
+tenancy.connection('couch', function(config){
+  return nano(config.url);
+});
+```
 
 >**Example**
 ```js
@@ -151,6 +175,8 @@ tenancy.connection('couch', function(){});
 ```
 
 ### Tenant
+
+#### Methods
 
 #### `constructor(name, configuration, connectionsMap)`
 
@@ -168,3 +194,19 @@ Configuration object that gets passed to connection factories.
 Object
 
 Key-Value pairs of connections names and factory methods
+
+#### `connection(name)`
+
+**name** `String`
+
+Returns a promise that will resolve with the tenanted connection
+
+#### Properties
+
+#### `name`
+
+Tenant name
+
+#### config
+
+Tenant configuration

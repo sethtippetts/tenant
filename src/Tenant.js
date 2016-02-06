@@ -1,5 +1,6 @@
 import assert from 'assert';
 import Bluebird from 'bluebird';
+import Connection from './Connection';
 
 export default class Tenancy {
   constructor(name = 'development', config = {}, connections = {}) {
@@ -9,25 +10,59 @@ export default class Tenancy {
     // Assign
     this.config = config;
     this.name = name;
-    this.connections = connections;
+    this.connections = {};
 
-    for (var key in this.connections) {
-      this.connections(key, this.connections[key]);
-    }
+    Object.keys(connections)
+      .map(key => this.connection(key, connections[key]));
   }
-  connection(name, ...extra) {
+  connection(name, value = []) {
 
-    let [ value ] = extra;
+    if (typeof name !== 'string') throw new TypeError('Connection name is required.');
+
+    // Getter
+    if (!value || Array.isArray(value)) {
+
+      let conn = this.connections[name];
+
+      if (!conn || typeof conn.factory !== 'function') {
+        return Bluebird.reject(new RangeError(`Connection name "${name}" not found.`));
+      }
+
+      return conn.factory(...value, this.config);
+    }
+
+    // Setter
+
+    if (!(value instanceof Connection)) {
+      // Allow a factory function shorthand
+      if (typeof value === 'function') {
+        value = { factory: value };
+      }
+      value = new Connection(name, value);
+    }
+
+    this.connections[name] = value;
+    return this;
+  }
+  health(name, value) {
+
     // Setter
     if (typeof value === 'function') {
-      this.connections[name] = Bluebird.method(value);
+      this.connections[name].health(value);
       return this;
     }
 
     // Getter
-    let getter = this.connections[name];
+    if (name) {
+      return this.connections[name].health(...value, this.config);
+    }
 
-    assert(typeof getter === 'function', `Connection name "${name}" not found.`);
-    return getter(...extra, this.config);
+    return Bluebird.props(
+      Object.keys(this.connections)
+        .reduce((res, key) => {
+          res[key] = this.connections[key].health(this.config);
+          return res;
+        }, {})
+    );
   }
 }

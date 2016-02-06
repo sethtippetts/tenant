@@ -1,50 +1,74 @@
-import Promise from 'bluebird';
+import Bluebird from 'bluebird';
 import Tenant from './Tenant';
+import Connection from './Connection';
 
 export default class Tenancy {
-  constructor({ defaultTenant = process.env.NODE_ENV || 'development', tenants = {}, connections = {} }) {
+  constructor(options) {
+    if (typeof options !== 'object') throw new TypeError('Tenancy options must be an object.');
+
+    let {
+      defaultTenant = process.env.NODE_ENV || 'development',
+      tenants = {},
+      connections = {},
+    } = options;
+
     this.connections = {};
     this.tenants = {};
     this.defaultTenant = defaultTenant;
 
-    for (let key in tenants) {
-      this.tenant(key, tenants[key]);
-    }
-    for (let key in connections) {
-      this.connection(key, connections[key]);
-    }
+    Object.keys(tenants)
+      .map(key => this.tenant(key, tenants[key]));
+
+    Object.keys(connections)
+      .map(key => this.connection(key, connections[key]));
   }
   connection(name, value) {
 
     // Setter
-    let _connection = Promise.method(value);
+    if (typeof name !== 'string') throw new TypeError('Connection name is required.');
+
+    // Allow a factory function shorthand
+    if (typeof value === 'function') {
+      value = { factory: value };
+    }
+
+    // Setter
+    let _connection = new Connection(name, value);
 
     // Assign new connection to all existing tenants
-    for (let tenantName in this.tenants) {
-      this.tenants[tenantName].connection(name, _connection);
-    }
+    Object.keys(this.tenants)
+      .map(key => this.tenants[key].connection(name, _connection));
+
     this.connections[name] = _connection;
     return this;
   }
   tenant(name = this.defaultTenant, value = false) {
 
-    if (typeof name !== 'string' && name instanceof Tenant) {
-      value = name;
+    // Getter
+    if (!value) {
+      let _tenant = this.tenants[name];
+      if (!_tenant) throw new RangeError(`Tenant with name "${name}" not found.`);
+      return _tenant;
     }
 
-    if (!value) return this.tenants[name];
-
-    let _tenant = value;
-
-    if (!(_tenant instanceof Tenant)) {
-      _tenant = new Tenant(name, value);
+    if (!(value instanceof Tenant)) {
+      value = new Tenant(name, value);
     }
 
     // Assign all existing connections to new tenant
-    for (let key in this.connections) {
-      _tenant.connection(key, this.connections[key]);
-    }
-    this.tenants[name] = _tenant;
+    Object.keys(this.connections)
+      .map(key => value.connection(key, this.connections[key]));
+
+    this.tenants[name] = value;
     return this;
+  }
+  health(name) {
+    return Bluebird.props(
+      Object.keys(this.tenants)
+        .reduce((res, key) => {
+          res[key] = this.tenants[key].health(name);
+          return res;
+        }, {})
+    );
   }
 }

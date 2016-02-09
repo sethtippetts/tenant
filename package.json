@@ -17,7 +17,8 @@
     "multi-tenancy",
     "tenancy",
     "tenant",
-    "environment connections"
+    "environment connections",
+    "multi-tenant"
   ],
   "author": "Seth Tippetts <sethtippetts@gmail.com> (http://sethtippetts.com)",
   "license": "ISC",

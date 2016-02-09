@@ -93,7 +93,7 @@ describe('Connection', function(){
       expect(blueprint.health(connection)).to.eventually.be.rejectedWith(Error);
     });
   });
-  describe.only('#factory', () => {
+  describe('#factory', () => {
     it('should return a promise', () => {
       let results = blueprint.factory({});
       expect(results).to.be.an.instanceof(Bluebird);

@@ -25,7 +25,7 @@ export default class Tenancy {
 
 
     if (!value || Array.isArray(value)) {
-      this.getConnection(name, value);
+      return this.getConnection(name, value);
     }
 
     // Setter

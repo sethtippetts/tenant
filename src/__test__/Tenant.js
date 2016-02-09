@@ -3,6 +3,8 @@
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
+import { UNKNOWN_STATUS } from '../constants';
+
 import Tenant from '../Tenant';
 
 chai.use(chaiAsPromised);
@@ -64,10 +66,10 @@ describe('Tenant', () => {
   });
   describe('#health', () => {
     it('should be a getter if it has a single string argument', () => {
-      expect(tenant.health('couchdb', ['users'])).to.eventually.equal(true);
+      expect(tenant.health('couchdb', ['users'])).to.eventually.have.deep.property('value', true);
     });
-    it('should return "Not implemented." as a default health check', () => {
-      expect(tenant.health('couchdb', ['users'])).to.eventually.equal(true);
+    it(`should return "${UNKNOWN_STATUS}" as a default health check`, () => {
+      expect(tenant.health('s3')).to.eventually.have.deep.property('status', UNKNOWN_STATUS);
     });
   })
 });

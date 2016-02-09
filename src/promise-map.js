@@ -24,10 +24,7 @@ function parseValue(inspection) {
   }
 
   if (inspection.isFulfilled()) {
-    let results = inspection.value();
-    let { value } = results;
-    if (typeof value === 'object') return value;
-    return results;
+    return inspection.value();
   }
 
 }

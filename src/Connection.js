@@ -13,10 +13,21 @@ export default class Connection {
     cache = { ttl: 0, retries: 3 },
   }) {
     log(`Constructor for "${name}" connection.`);
+
+    // Connection name
+    if (typeof name !== 'string') throw new TypeError('Connection name must be type String');
     this.name = name;
+
+    // Factory method
+    if (typeof _factory !== 'function') throw new TypeError('Connection factory method must be type Function');
     this.argumentsLength = _factory.length;
     this.factoryMethod = Bluebird.method(_factory);
-    this.healthMethod = health;
+
+    // Health check method
+    if (typeof health !== 'function') throw new TypeError('Connection health method must be type Function')
+    this.healthMethod = Bluebird.method(health);
+
+    // Cache settings
     this.settings = {
       cache,
     };
@@ -31,14 +42,17 @@ export default class Connection {
     return true;
   }
   health(conn) {
-    // Getter
-    return Bluebird.method(this.healthMethod)(conn.connection)
+
+    if (typeof conn !== 'object') throw new TypeError('Health method requires a connection Object');
+
+    return this.healthMethod(conn.connection)
       .then(value => {
         if (~statuses.indexOf(value)) {
           conn.status = value;
           return { status: value };
         }
         conn.status = value ? ONLINE_STATUS : OFFLINE_STATUS;
+        if (typeof value === 'object') return value;
         return {
           value,
           status: conn.status,

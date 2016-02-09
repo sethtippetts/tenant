@@ -1,4 +1,4 @@
-import Promise from 'bluebird';
+import Bluebird from 'bluebird';
 import Tenancy from './Tenancy';
 import requestParser from './request-parser';
 
@@ -17,7 +17,7 @@ export default class Middleware extends Tenancy {
     this.middlewares = middlewares;
     this.tenantPath = tenantPath;
     this.requestKey = requestKey;
-    this.parse = Promise.method(parse.bind(null, this.requestKey));
+    this.parse = Bluebird.method(parse.bind(null, this.requestKey));
 
     for (var key in this.middlewares) {
       this.middleware(key, this.middlewares[key]);

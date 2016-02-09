@@ -4,33 +4,49 @@ import { OFFLINE_STATUS, ONLINE_STATUS, UNKNOWN_STATUS } from './constants';
 
 let log = new Debug('tenant:connection');
 
+let statuses = [ ONLINE_STATUS, OFFLINE_STATUS, UNKNOWN_STATUS ];
+
 export default class Connection {
   constructor (name, {
     factory: _factory,
-    health = () => Bluebird.resolve('Not implemented.'),
+    health = () => Bluebird.resolve(UNKNOWN_STATUS),
     cache = { ttl: 0, retries: 3 },
   }) {
     log(`Constructor for "${name}" connection.`);
     this.name = name;
     this.argumentsLength = _factory.length;
     this.factoryMethod = Bluebird.method(_factory);
-    this.healthMethod = Bluebird.method(health);
-    this.status = UNKNOWN_STATUS;
-    this.retries = 0;
+    this.healthMethod = health;
     this.settings = {
       cache,
     };
-    this.activeConnection;
-    this.createdAt;
   }
-  health(...value) {
+  verify({ status, createdAt }) {
+    // Status is healthy
+    if (status !== ONLINE_STATUS) return false;
 
+    // The createdAt time is within the connection life threshold
+    if (this.settings.cache.ttl && (new Date()).getTime() - createdAt > this.settings.cache.ttl) return false;
+
+    return true;
+  }
+  health(conn) {
     // Getter
-    return this.healthMethod(this.factory(...value))
-      .tap(results => this.status = results ? ONLINE_STATUS : OFFLINE_STATUS)
+    return Bluebird.method(this.healthMethod)(conn.connection)
+      .then(value => {
+        if (~statuses.indexOf(value)) {
+          conn.status = value;
+          return { status: value };
+        }
+        conn.status = value ? ONLINE_STATUS : OFFLINE_STATUS;
+        return {
+          value,
+          status: conn.status,
+        };
+      })
       .catch(ex => {
-        console.error(`Connection "${this.name}" failed the health check.`, ex);
-        this.status = OFFLINE_STATUS;
+        conn.status = OFFLINE_STATUS;
+        throw ex;
       });
   }
   factory(...value) {
@@ -42,38 +58,13 @@ export default class Connection {
       }
     }
 
-    if (
-      // Status is healthy
-      this.status === ONLINE_STATUS
-
-      // Has an active connection
-      && this.activeConnection
-
-      // The createdAt time is within the connection life threshold
-      && (!this.settings.ttl || (new Date()).getTime() - this.createdAt < this.settings.ttl)
-    ) {
-      return Promise.resolve(this.activeConnection);
-    }
-
     // Getter
     return this.factoryMethod(...value)
-      .tap(() => {
-        this.createdAt = (new Date()).getTime();
-        this.status = ONLINE_STATUS;
-      })
-      .catch(ex => {
-        console.error(`Failed to create connection "${this.name}"`, ex);
-
-        // Trying again
-        if (this.retries > this.settings.cache.retries) {
-          this.retries++;
-          return this.factory(...value);
-        }
-
-        // Failed permanently
-        console.error(`Connection "${this.name}" is unhealthy`);
-        this.retries = 0;
-        this.status = OFFLINE_STATUS;
-      })
+      .then(connection => ({
+        createdAt: (new Date()).getTime(),
+        connection,
+        status: UNKNOWN_STATUS,
+        retries: 0,
+      }))
   }
 }

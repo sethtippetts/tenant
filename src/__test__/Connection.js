@@ -24,45 +24,55 @@ var config = {
 };
 
 describe('Connection', function(){
-  let connection;
+  let blueprint, connection;
   beforeEach(function(){
-    connection = new Connection('test', config);
+    blueprint = new Connection('test', config);
+    return blueprint.factory({})
+      .then(conn => connection = conn);
   });
   describe('constructor', function(){
     it('should have a name', function(){
-      expect(connection.name).to.equal('test');
-      expect(connection.name).to.not.equal('test1');
-    });
-    it('should have a connection status of UNKNOWN', () => {
-      expect(connection.status).to.equal(UNKNOWN_STATUS);
+      expect(blueprint.name).to.equal('test');
+      expect(blueprint.name).to.not.equal('test1');
     });
     it('should have a "factory"', () => {
-      expect(connection.factory).to.be.a('function');
+      expect(blueprint.factory).to.be.a('function');
     });
 
     it('should have a "health" method', () => {
-      expect(connection.health).to.be.a('function');
+      expect(blueprint.health).to.be.a('function');
     });
   });
   describe('#health', () => {
     it('should return a promise', () => {
-      let results = connection.health({});
+      let results = blueprint.health({});
       expect(results).to.be.an.instanceof(Bluebird);
     });
     it(`should set status to "${OFFLINE_STATUS}" if the health check was unsuccessful`, () => {
-      let conn = new Connection('test', { factory: () => {}, health: () => false });
-      expect(conn.health({})).to.eventually.equal(false);
-      conn.health({})
+      blueprint = new Connection('test', { factory: () => {}, health: () => false });
+
+        // expect().to.eventually.equal(false);
+      let results = blueprint.health(connection);
+
+      expect(results).to.eventually.equal(false);
+      return results
         .tap(() => {
-          expect(conn.status).to.not.equal(UNKNOWN_STATUS)
-          expect(conn.status).to.equal(OFFLINE_STATUS)
+          expect(connection.status).to.not.equal(UNKNOWN_STATUS);
+          expect(connection.status).to.equal(OFFLINE_STATUS);
         });
-    })
+    });
+    it(`should handle a throw or rejection`, () => {
+      blueprint = new Connection('test', { factory: () => {}, health: () => { throw new Error('Test connection health check failed.'); } });
+      expect(blueprint.health(connection)).to.eventually.be.rejectedWith(Error);
+    });
   });
   describe('#factory', () => {
     it('should return a promise', () => {
-      let results = connection.factory({});
+      let results = blueprint.factory({});
       expect(results).to.be.an.instanceof(Bluebird);
+    });
+    it('should return a connection with a status of UNKNOWN', () => {
+      expect(blueprint.factory({})).to.eventually.deep.property('status', UNKNOWN_STATUS);
     });
   });
 });

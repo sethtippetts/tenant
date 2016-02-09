@@ -52,7 +52,7 @@ describe('Tenancy', () => {
       expect(tenancy.connections).to.have.property('couchdb');
     });
     it('should assign connections to tenants', () => {
-      expect(tenancy.tenants.staging.connections).to.have.property('couchdb');
+      expect(tenancy.tenant('staging').factories).to.have.property('couchdb');
     });
     it('should extend defaults', () => {
       let _config = clone(config);

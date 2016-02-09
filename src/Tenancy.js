@@ -1,6 +1,6 @@
-import Bluebird from 'bluebird';
 import Tenant from './Tenant';
 import Connection from './Connection';
+import promiseMap from './promise-map';
 
 export default class Tenancy {
   constructor(options) {
@@ -63,12 +63,6 @@ export default class Tenancy {
     return this;
   }
   health(name) {
-    return Bluebird.props(
-      Object.keys(this.tenants)
-        .reduce((res, key) => {
-          res[key] = this.tenants[key].health(name);
-          return res;
-        }, {})
-    );
+    return promiseMap(this.tenants, (key) => this.tenants[key].health(name));
   }
 }

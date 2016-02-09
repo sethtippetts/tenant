@@ -44,19 +44,19 @@ describe('Tenant', () => {
     });
     it('should be a getter with two arguments if the second is an array', () => {
       expect(tenant.connection('couchdb', ['users'])).to.eventually.be.an('object');
-      expect(tenant.connection('couchdb', ['users'])).to.eventually.have.property('tablename');
+      expect(tenant.connection('couchdb', ['users'])).to.eventually.have.deep.property('connection.tablename');
     });
     it('should replace factory arguments with null if they\'re not supplied', () => {
-      expect(tenant.connection('couchdb')).to.eventually.have.property('tablename')
+      expect(tenant.connection('couchdb')).to.eventually.have.deep.property('connection.tablename')
         .and.to.be.null;
     });
     it('should be a setter if the second argument is a function', () => {
       tenant.connection('testconn', () => ({}));
-      expect(tenant.connections).to.have.property('testconn');
+      expect(tenant.factories).to.have.property('testconn');
     });
     it('should be a setter if the second argument is an object', () => {
       tenant.connection('testconn', { factory: () => ({}) });
-      expect(tenant.connections).to.have.property('testconn');
+      expect(tenant.factories).to.have.property('testconn');
     });
     it('should return chainable instance for setters', () => {
       expect(tenant.connection('testconn', () => ({}))).to.be.instanceof(Tenant);

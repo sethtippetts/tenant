@@ -1,6 +1,6 @@
 {
   "name": "tenant",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Unopinionated tenanted connection and configuration management",
   "main": "lib/index.js",
   "scripts": {

@@ -46,10 +46,10 @@ describe('Tenant', () => {
     });
     it('should be a getter with two arguments if the second is an array', () => {
       expect(tenant.connection('couchdb', ['users'])).to.eventually.be.an('object');
-      expect(tenant.connection('couchdb', ['users'])).to.eventually.have.deep.property('connection.tablename');
+      expect(tenant.connection('couchdb', ['users'])).to.eventually.have.deep.property('tablename');
     });
     it('should replace factory arguments with null if they\'re not supplied', () => {
-      expect(tenant.connection('couchdb')).to.eventually.have.deep.property('connection.tablename')
+      expect(tenant.connection('couchdb')).to.eventually.have.deep.property('tablename')
         .and.to.be.null;
     });
     it('should be a setter if the second argument is a function', () => {

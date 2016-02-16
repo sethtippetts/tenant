@@ -52,14 +52,7 @@ describe('Tenancy', () => {
       expect(tenancy.connections).to.have.property('couchdb');
     });
     it('should assign connections to tenants', () => {
-      expect(tenancy.tenant('staging').factories).to.have.property('couchdb');
-    });
-    it('should extend defaults', () => {
-      let _config = clone(config);
-      delete _config.defaultTenant;
-      let _tenancy = new Tenancy(_config);
-      expect(_tenancy.tenants).to.be.an('object');
-      expect(_tenancy.defaultTenant).to.equal(process.env.NODE_ENV || 'development');
+      expect(tenancy.tenant('staging').connections).to.have.property('couchdb');
     });
   });
   describe('#connection', () => {

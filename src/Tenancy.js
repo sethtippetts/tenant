@@ -1,20 +1,17 @@
 import Tenant from './Tenant';
 import Connection from './Connection';
-import promiseMap from './promise-map';
 
 export default class Tenancy {
-  constructor(options) {
+  constructor(options = {}) {
     if (typeof options !== 'object') throw new TypeError('Tenancy options must be an object.');
 
     let {
-      defaultTenant = process.env.NODE_ENV || 'development',
       tenants = {},
       connections = {},
     } = options;
 
     this.connections = {};
     this.tenants = {};
-    this.defaultTenant = defaultTenant;
 
     Object.keys(tenants)
       .map(key => this.tenant(key, tenants[key]));
@@ -27,11 +24,6 @@ export default class Tenancy {
     // Setter
     if (typeof name !== 'string') throw new TypeError('Connection name is required.');
 
-    // Allow a factory function shorthand
-    if (typeof value === 'function') {
-      value = { factory: value };
-    }
-
     // Setter
     let _connection = new Connection(name, value);
 
@@ -42,7 +34,9 @@ export default class Tenancy {
     this.connections[name] = _connection;
     return this;
   }
-  tenant(name = this.defaultTenant, value = false) {
+  tenant(name, value) {
+
+    if (typeof name !== 'string') throw new TypeError('Argument "name" must be type "string".');
 
     // Getter
     if (!value) {
@@ -61,8 +55,5 @@ export default class Tenancy {
 
     this.tenants[name] = value;
     return this;
-  }
-  health(name) {
-    return promiseMap(this.tenants, (key) => this.tenants[key].health(name));
   }
 }

@@ -1,8 +1,11 @@
 # Tenant
 
+[![npm](https://img.shields.io/npm/dm/localeval.svg?style=flat-square)](https://www.npmjs.com/package/tenant)
+[![npm](https://img.shields.io/npm/v/npm.svg?style=flat-square)](https://www.npmjs.com/package/tenant)
+
 ## Getting started
 
->Looking for the express middleware? Try [express-tenant](express-tenant)!
+>Looking for the express middleware? Try [express-tenant](https://www.npmjs.com/package/express-tenant)!
 
 ### Installation
 

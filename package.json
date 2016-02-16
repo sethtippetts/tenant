@@ -27,7 +27,6 @@
   },
   "homepage": "https://github.com/SethTippetts/tenant#readme",
   "dependencies": {
-    "bluebird": "^2.10.2",
     "debug": "^2.2.0"
   },
   "devDependencies": {

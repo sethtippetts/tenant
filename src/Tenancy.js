@@ -24,14 +24,15 @@ export default class Tenancy {
     // Setter
     if (typeof name !== 'string') throw new TypeError('Connection name is required.');
 
-    // Setter
-    let _connection = new Connection(name, value);
+    if (!(value instanceof Connection)) {
+      value = new Connection(name, value);
+    }
 
     // Assign new connection to all existing tenants
     Object.keys(this.tenants)
-      .map(key => this.tenants[key].connection(name, _connection));
+      .map(key => this.tenants[key].connection(name, value));
 
-    this.connections[name] = _connection;
+    this.connections[name] = value;
     return this;
   }
   tenant(name, value) {

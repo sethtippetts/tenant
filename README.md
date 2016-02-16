@@ -20,7 +20,7 @@ var Tenancy = require('tenant');
 
 **ES6**
 ```js
-import { Tenancy, Tenant, Middleware } from 'tenant';
+import { Tenancy, Tenant, Connection } from 'tenant';
 ```
 
 ### Tenancy configuration options
@@ -30,7 +30,6 @@ import Tenancy from 'tenant';
 import Bluebird from 'bluebird';
 
 let tenancy = new Tenancy({
-  defaultTenant: process.env.NODE_ENV || 'development',
   tenants: {
     production: convict({}), // use some library
     staging: config, // a custom module
@@ -55,6 +54,10 @@ let tenancy = new Tenancy({
     couch(config) {
       return nano(config.couch.url);
     },
+
+    service(extra, parameters, config) {
+      // Return whatever you want, promise, function, object, (spatula?)
+    },
     // ...other tenanted connections
   ],
 });
@@ -62,7 +65,7 @@ let tenancy = new Tenancy({
 
 ### Functional initialization
 
-Alternatively you can add connections and tenants functionally
+Alternatively you can add connections and tenants functionally. Pass a fully qualified `Tenant` object or a name and a configuration object. Order doesn't matter, connections will populate to tenants and vice versa
 
 __Example__:
 ```js
@@ -72,6 +75,7 @@ let tenancy = new Tenancy();
 
 let staging = new Tenant('staging', stagingConfig);
 
+// Chainable. Order doesn't matter.
 tenancy
   .tenant(staging)
   .connection('salesforce', (config) => {
@@ -89,127 +93,38 @@ let secret = tenancy.tenant('production').config.sessionSecret;
 
 ### Getting a tenant connection
 ```js
-let results = tenancy.tenant('staging').connection('couch')
-  .then(CouchDB => {
-    let Users = CouchDB.use('users');
-    return Users.list();
-  });
+let CouchDB = tenancy.tenant('staging').connection('couch');
+```
+
+#### Passing additional arguments to the connection factory method
+```js
+// Define your factory method with additional arguments
+new Connection('couch', (tablename, config) => {
+  return nano(config.couchdb).use(tablename);
+});
+
+// Call connection with an array of additional arguments
+let CouchDB = tenancy.tenant('staging').connection('couch', ['users']);
 ```
 
 ## API Reference
 
-### Tenancy
+#### [`class Tenancy`](https://github.com/SethTippetts/tenant/wiki/Tenancy)
+- [new Tenancy([params])](https://github.com/SethTippetts/tenant/wiki/Tenancy#constructor)
+  - [tenant(name)](https://github.com/SethTippetts/tenant/wiki/Tenancy#tenant-getter)
+  - [tenant(name, config)](https://github.com/SethTippetts/tenant/wiki/Tenancy#tenant-setter)
+  - [tenant(Tenant)](https://github.com/SethTippetts/tenant/wiki/Tenancy#tenant-advanced-setter)
+  - [connection(name, factory)](https://github.com/SethTippetts/tenant/wiki/Tenancy#connection-setter)
+  - [connection(Connection)](https://github.com/SethTippetts/tenant/wiki/Tenancy#connection--advanced-setter)
 
-#### Methods
-------------
+#### [`class Tenant`](https://github.com/SethTippetts/tenant/wiki/Tenant)
+- [new Tenant()](https://github.com/SethTippetts/tenant/wiki/Tenant#constructor)
+  - [connection(name)](https://github.com/SethTippetts/tenant/wiki/Tenant#connection-getter)
+  - [connection(name, value)](https://github.com/SethTippetts/tenant/wiki/Tenant#connection-setter)
+  - [config](https://github.com/SethTippetts/tenant/wiki/Tenant#config)
+  - [name](https://github.com/SethTippetts/tenant/wiki/Tenant#name)
 
-#### `constructor(params)`
-
-**params** `Object`
-
->**Example**
-```js
-new Tenancy({
-
-  // Tenant configurations
-  tenants: {
-    staging: { /* Staging config */ }
-  },
-
-  // Tenanted connections
-  connections: {
-    couch: function(config) {
-      return Promise.resolve('yay');
-    },
-  },
-
-  // Default tenant if none is provided
-  defaultTenant: process.env.NODE_ENV || 'development',
-});
-```
-
-#### `tenant(tenant)`
-
-**tenant** [`Tenant`](#tenant)
-
->**Example**
-```js
-tenancy.tenant(new Tenant('staging', {}));
-```
-
-#### `tenant([name])`
-
-**name** `String` _(optional)_
-
-Returns a tenant by the name or the default tenant if none is provided
-
-#### `tenant(name, config)`
-
-**name** `String`
-
-**config** `Object`
-
->**Example**
-```js
-tenancy.tenant('staging', {});
-```
-
-#### `connection(name, factory)`
-
-**name** `String`
-
-Key associated with a connection factory.
-
-**factory** `Function`
-
-Connection factories are functions with tenant configuration as the last argument.
-Connection factory function must return a promise, an object, or throw an error.
-
->**Example**
-```js
-tenancy.connection('couch', function(config){
-  return nano(config.url);
-});
-```
-
->**Example**
-```js
-tenancy.connection('couch', function(){});
-```
-
-### Tenant
-
-#### Methods
-
-#### `constructor(name, configuration, connectionsMap)`
-
-**name**
-String
-
-Key used to retrieve this tenant
-
-**configuration**
-Object
-
-Configuration object that gets passed to connection factories.
-
-**connectionsMap**
-Object
-
-Key-Value pairs of connections names and factory methods
-
-#### `connection(name)`
-
-**name** `String`
-
-Returns a promise that will resolve with the tenanted connection
-
-#### Properties
-
-#### `name`
-
-Tenant name
-
-#### config
-
-Tenant configuration
+#### [`class Connection`](https://github.com/SethTippetts/tenant/wiki/Connection)
+- [new Connection(name, factory)](https://github.com/SethTippetts/tenant/wiki/Connection#constructor)
+  - [factory(configuration)](https://github.com/SethTippetts/tenant/wiki/Connection#factory)
+  - [name](https://github.com/SethTippetts/tenant/wiki/Connection#name)

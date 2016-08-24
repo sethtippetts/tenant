@@ -4,17 +4,16 @@
   "description": "Unopinionated tenanted connection and configuration management",
   "main": "lib/index.js",
   "scripts": {
-    "test": "mocha --opts mocha.opts",
-    "prepublish": "npm run compile",
-    "predeploy": "npm run compile",
-    "precompile": "npm test",
     "compile": "babel -d lib/ src/",
-    "watch": "babel -d lib/ src/ -w",
-    "deploy": "publish"
+    "deploy": "publish",
+    "prepublish": "npm test",
+    "pretest": "npm run compile",
+    "test": "mocha --opts mocha.opts",
+    "watch": "babel -d lib/ src/ -w"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SethTippetts/tenant.git"
+    "url": "git+https://github.com/mostcowbell/tenant.git"
   },
   "keywords": [
     "multi-tenancy",
@@ -26,9 +25,9 @@
   "author": "Seth Tippetts <sethtippetts@gmail.com> (http://sethtippetts.com)",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/SethTippetts/tenant/issues"
+    "url": "https://github.com/mostcowbell/tenant/issues"
   },
-  "homepage": "https://github.com/SethTippetts/tenant#readme",
+  "homepage": "https://github.com/mostcowbell/tenant#readme",
   "dependencies": {},
   "devDependencies": {
     "babel-cli": "^6.3.17",

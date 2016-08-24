@@ -27,9 +27,7 @@
     "url": "https://github.com/SethTippetts/tenant/issues"
   },
   "homepage": "https://github.com/SethTippetts/tenant#readme",
-  "dependencies": {
-    "debug": "^2.2.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "babel-cli": "^6.3.17",
     "babel-preset-es2015": "^6.3.13",

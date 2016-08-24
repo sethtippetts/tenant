@@ -1,7 +1,8 @@
 import Connection from './Connection';
+import { defaultLogger } from './util'
 
 export default class Tenant {
-  constructor(name, config, connections = {}) {
+  constructor(name, config, connections = {}, logger = defaultLogger) {
 
     if (typeof name !== 'string') throw new TypeError(`Expected tenant name to be type "string" not "${typeof name}"`);
 
@@ -11,6 +12,7 @@ export default class Tenant {
     this.name = name;
     this.config = config;
     this.connections = {};
+    this.logger = logger
 
     Object.keys(connections)
       .map(key => this.connection(key, connections[key]));

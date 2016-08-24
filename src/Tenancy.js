@@ -1,31 +1,38 @@
 import Tenant from './Tenant';
 import Connection from './Connection';
+import { defaultLogger, isObject, isString } from './util'
+
 
 export default class Tenancy {
   constructor(options = {}) {
-    if (typeof options !== 'object') throw new TypeError('Tenancy options must be an object.');
+    if (!isObject(options)) throw new TypeError('Tenancy options must be an object.');
 
     let {
       tenants = {},
       connections = {},
+      logger = defaultLogger,
     } = options;
 
     this.connections = {};
     this.tenants = {};
+    this.logger = logger
 
     Object.keys(tenants)
-      .map(key => this.tenant(key, tenants[key]));
+      .map(key => this.tenant(key, tenants[key], logger));
 
     Object.keys(connections)
-      .map(key => this.connection(key, connections[key]));
+      .map(key => this.connection(key, connections[key], logger));
   }
   connection(name, value) {
 
     // Setter
-    if (typeof name !== 'string') throw new TypeError('Connection name is required.');
+    if (!isString(name)) {
+      this.logger.fatal('Connection name is required.')
+      throw new TypeError('Connection name is required.')
+    }
 
     if (!(value instanceof Connection)) {
-      value = new Connection(name, value);
+      value = new Connection(name, value, this.logger);
     }
 
     // Assign new connection to all existing tenants
@@ -37,17 +44,19 @@ export default class Tenancy {
   }
   tenant(name, value) {
 
-    if (typeof name !== 'string') throw new TypeError('Argument "name" must be type "string".');
+    if (!isString(name)) throw new TypeError('Argument "name" must be type "string".');
 
     // Getter
     if (!value) {
       let _tenant = this.tenants[name];
-      if (!_tenant) throw new RangeError(`Tenant with name "${name}" not found.`);
+      if (!_tenant) {
+        throw new RangeError(`Tenant with name "${name}" not found.`);
+      }
       return _tenant;
     }
 
     if (!(value instanceof Tenant)) {
-      value = new Tenant(name, value);
+      value = new Tenant(name, value, {}, this.logger);
     }
 
     // Assign all existing connections to new tenant

@@ -6,9 +6,9 @@ import Connection from '../Connection';
 
 chai.use(chaiAsPromised);
 
-let { expect } = chai;
+const { expect } = chai;
 
-var config = (tablename, config) => {
+const config = (tablename, config) => {
   return {};
 };
 

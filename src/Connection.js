@@ -1,17 +1,21 @@
-import { defaultLogger, isString, isFunction } from './util'
+const {
+  defaultLogger,
+  isString,
+  isFunction,
+} = require('./util')
 
-export default class Connection {
+module.exports = class Connection {
   constructor (name, _factory, logger = defaultLogger) {
-    logger.trace(`Constructor for "${name}" connection.`);
+    logger.trace(`Constructor for "${name}" connection.`)
 
     // Connection name
-    if (!isString(name)) throw new TypeError('Connection name must be type String');
-    this.name = name;
+    if (!isString(name)) throw new TypeError('Connection name must be type String')
+    this.name = name
 
     // Factory method
-    if (!isFunction(_factory)) throw new TypeError('Connection factory method must be type Function');
-    this.argumentsLength = _factory.length;
-    this._factory = _factory;
+    if (!isFunction(_factory)) throw new TypeError('Connection factory method must be type Function')
+    this.argumentsLength = _factory.length
+    this._factory = _factory
   }
   factory(...value) {
 
@@ -21,6 +25,6 @@ export default class Connection {
     }
 
     // Getter
-    return this._factory(...value);
+    return this._factory(...value)
   }
 }

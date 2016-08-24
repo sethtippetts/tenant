@@ -1,21 +1,28 @@
-
-
 const stderr = console.error.bind(console)
 
 const is = (type, val) => typeof val === type
 
-export const isUndefined = is.bind(null, 'undefined')
-export const isObject = is.bind(null, 'object')
-export const isString = is.bind(null, 'string')
-export const isFunction = is.bind(null, 'function')
+const isFunction = is.bind(null, 'function')
+const isObject = is.bind(null, 'object')
+const isString = is.bind(null, 'string')
+const isUndefined = is.bind(null, 'undefined')
 
-export const noop = () => {}
+const noop = () => {}
 
-export const defaultLogger = {
+const defaultLogger = {
   trace: noop,
   debug: noop,
   info: noop,
   warn: stderr,
   error: stderr,
   fatal: stderr,
+}
+
+module.exports = {
+  isUndefined,
+  isObject,
+  isString,
+  isFunction,
+  noop,
+  defaultLogger,
 }

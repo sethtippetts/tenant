@@ -1,27 +1,32 @@
-import Tenant from './Tenant';
-import Connection from './Connection';
-import { defaultLogger, isObject, isString } from './util'
+const Tenant = require('./Tenant')
+const Connection = require('./Connection')
+const {
+  defaultLogger,
+  isObject,
+  isString,
+} = require('./util')
 
 
-export default class Tenancy {
+class Tenancy {
   constructor(options = {}) {
-    if (!isObject(options)) throw new TypeError('Tenancy options must be an object.');
+
+    if (!isObject(options)) throw new TypeError('Tenancy options must be an object.')
 
     let {
       tenants = {},
       connections = {},
       logger = defaultLogger,
-    } = options;
+    } = options
 
-    this.connections = {};
-    this.tenants = {};
+    this.connections = {}
+    this.tenants = {}
     this.logger = logger
 
     Object.keys(tenants)
-      .map(key => this.tenant(key, tenants[key], logger));
+      .map(key => this.tenant(key, tenants[key], logger))
 
     Object.keys(connections)
-      .map(key => this.connection(key, connections[key], logger));
+      .map(key => this.connection(key, connections[key], logger))
   }
   connection(name, value) {
 
@@ -32,38 +37,43 @@ export default class Tenancy {
     }
 
     if (!(value instanceof Connection)) {
-      value = new Connection(name, value, this.logger);
+      value = new Connection(name, value, this.logger)
     }
 
     // Assign new connection to all existing tenants
     Object.keys(this.tenants)
-      .map(key => this.tenants[key].connection(name, value));
+      .map(key => this.tenants[key].connection(name, value))
 
-    this.connections[name] = value;
-    return this;
+    this.connections[name] = value
+    return this
   }
   tenant(name, value) {
 
-    if (!isString(name)) throw new TypeError('Argument "name" must be type "string".');
+    if (!isString(name)) throw new TypeError('Argument "name" must be type "string".')
 
     // Getter
     if (!value) {
-      let _tenant = this.tenants[name];
+      let _tenant = this.tenants[name]
       if (!_tenant) {
-        throw new RangeError(`Tenant with name "${name}" not found.`);
+        throw new RangeError(`Tenant with name "${name}" not found.`)
       }
-      return _tenant;
+      return _tenant
     }
 
     if (!(value instanceof Tenant)) {
-      value = new Tenant(name, value, {}, this.logger);
+      value = new Tenant(name, value, {}, this.logger)
     }
 
     // Assign all existing connections to new tenant
     Object.keys(this.connections)
-      .map(key => value.connection(key, this.connections[key]));
+      .map(key => value.connection(key, this.connections[key]))
 
-    this.tenants[name] = value;
-    return this;
+    this.tenants[name] = value
+    return this
   }
 }
+
+Tenancy.Tenant = Tenant
+Tenancy.Connection = Connection
+
+module.exports = Tenancy

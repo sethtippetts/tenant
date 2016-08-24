@@ -6,9 +6,11 @@
   "scripts": {
     "test": "mocha --opts mocha.opts",
     "prepublish": "npm run compile",
+    "predeploy": "npm run compile",
     "precompile": "npm test",
     "compile": "babel -d lib/ src/",
-    "watch": "babel -d lib/ src/ -w"
+    "watch": "babel -d lib/ src/ -w",
+    "deploy": "publish"
   },
   "repository": {
     "type": "git",
@@ -35,6 +37,7 @@
     "chai": "^3.5.0",
     "chai-as-promised": "^5.2.0",
     "eslint": "^1.10.3",
-    "mocha": "^2.4.5"
+    "mocha": "^2.4.5",
+    "publish": "^0.6.0"
   }
 }

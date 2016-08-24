@@ -3,3 +3,10 @@ machine:
     version: 4.2.2
   post:
     - npm install -g npm@3.x.x
+deployment:
+  npm:
+    branch: master
+    commands:
+      # login using environment variables
+      - echo -e "$NPM_USERNAME\n$NPM_PASSWORD\n$NPM_EMAIL" | npm login
+      - npm run deploy

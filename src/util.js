@@ -1,6 +1,6 @@
 const stderr = console.error.bind(console)
 
-const is = (type, val) => typeof val === type
+const is = (type, val) => typeof val === type // eslint-disable-line valid-typeof
 
 const isFunction = is.bind(null, 'function')
 const isObject = is.bind(null, 'object')

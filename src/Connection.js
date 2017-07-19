@@ -6,7 +6,7 @@ const {
 
 module.exports = class Connection {
   constructor (name, _factory, logger = defaultLogger) {
-    logger.trace(`Constructor for "${name}" connection.`)
+    logger.trace(`Constructor for "${ name }" connection.`)
 
     // Connection name
     if (!isString(name)) throw new TypeError('Connection name must be type String')
@@ -17,8 +17,7 @@ module.exports = class Connection {
     this.argumentsLength = _factory.length
     this._factory = _factory
   }
-  factory(...value) {
-
+  factory (...value) {
     // If they don't pass all the argument their factory requires
     while (value.length < this.argumentsLength) {
       value.unshift(null)

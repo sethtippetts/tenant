@@ -1,5 +1,7 @@
 # Tenant
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/mostcowbell/tenant.svg)](https://greenkeeper.io/)
+
 [![npm](https://img.shields.io/npm/dm/tenant.svg?style=flat-square)](https://www.npmjs.com/package/tenant)
 [![npm](https://img.shields.io/npm/v/tenant.svg?style=flat-square)](https://www.npmjs.com/package/tenant)
 [![CircleCI](https://img.shields.io/circleci/project/mostcowbell/tenant.svg?maxAge=2592000?style=flat-square)](https://circleci.com/gh/mostcowbell/tenant)

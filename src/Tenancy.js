@@ -6,10 +6,8 @@ const {
   isString,
 } = require('./util')
 
-
 class Tenancy {
-  constructor(options = {}) {
-
+  constructor (options = {}) {
     if (!isObject(options)) throw new TypeError('Tenancy options must be an object.')
 
     let {
@@ -28,8 +26,7 @@ class Tenancy {
     Object.keys(connections)
       .map(key => this.connection(key, connections[key], logger))
   }
-  connection(name, value) {
-
+  connection (name, value) {
     // Setter
     if (!isString(name)) {
       this.logger.fatal('Connection name is required.')
@@ -47,15 +44,14 @@ class Tenancy {
     this.connections[name] = value
     return this
   }
-  tenant(name, value) {
-
+  tenant (name, value) {
     if (!isString(name)) throw new TypeError('Argument "name" must be type "string".')
 
     // Getter
     if (!value) {
       let _tenant = this.tenants[name]
       if (!_tenant) {
-        throw new RangeError(`Tenant with name "${name}" not found.`)
+        throw new RangeError(`Tenant with name "${ name }" not found.`)
       }
       return _tenant
     }

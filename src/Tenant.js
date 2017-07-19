@@ -7,9 +7,8 @@ const {
 } = require('./util')
 
 module.exports = class Tenant {
-  constructor(name, config, connections = {}, logger = defaultLogger) {
-
-    if (!isString(name)) throw new TypeError(`Expected tenant name to be type "string" not "${typeof name}"`)
+  constructor (name, config, connections = {}, logger = defaultLogger) {
+    if (!isString(name)) throw new TypeError(`Expected tenant name to be type "string" not "${ typeof name }"`)
 
     if (isUndefined(config)) throw new TypeError(`Tenant requires a configuration.`)
 
@@ -22,16 +21,14 @@ module.exports = class Tenant {
     Object.keys(connections)
       .map(key => this.connection(key, connections[key]))
   }
-  connection(name, value = []) {
-
+  connection (name, value = []) {
     if (!isString(name)) throw new TypeError('Connection name is required.')
-
 
     if (!value || Array.isArray(value)) {
       // Getter
       const connection = this.connections[name]
       if (!connection || !connection.factory || !isFunction(connection.factory)) {
-        throw new RangeError(`Connection name "${name}" not found.`)
+        throw new RangeError(`Connection name "${ name }" not found.`)
       }
 
       const factory = connection.factory.bind(connection)

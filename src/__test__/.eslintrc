@@ -1,4 +1,7 @@
 {
+  "env": {
+    "mocha": true
+  },
   "rules": {
     "comma-dangle": ["error", "always-multiline"],
     "template-curly-spacing": ["error", "always"]

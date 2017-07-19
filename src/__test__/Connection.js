@@ -43,12 +43,10 @@ describe('Connection', () => {
     })
     it('should match argument order of the definition', () => {
       blueprint = new Connection('test', (tablename, config) => {
-        expect(tablename).to.be.null
-        expect(config).to.be.empty
+        expect(tablename).to.be.null // eslint-disable-line no-unused-expressions
+        expect(config).to.be.empty // eslint-disable-line no-unused-expressions
       })
       return blueprint.factory({})
     })
   })
 })
-
-

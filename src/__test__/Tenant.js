@@ -55,7 +55,7 @@ describe('Tenant', () => {
       expect(tenant.connection('couchdb', ['users'])).to.have.deep.property('tablename')
     })
     it('should replace factory arguments with null if they\'re not supplied', () => {
-      expect(tenant.connection('couchdb')).to.have.deep.property('tablename')
+      expect(tenant.connection('couchdb')).to.have.deep.property('tablename') // eslint-disable-line no-unused-expressions
         .and.to.be.null
     })
     it('should be a setter if the second argument is a function', () => {
@@ -67,6 +67,3 @@ describe('Tenant', () => {
     })
   })
 })
-
-
-
